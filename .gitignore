@@ -1,0 +1,27 @@
+# environment
+
+.venv/
+**pycache**/
+*.pyc
+.ipynb_checkpoints/
+.vscode/
+
+# data: raw chips are NOT tracked (split CSVs are small and are tracked)
+
+data/sen1floods11/S2Hand/
+data/sen1floods11/LabelHand/
+data/sen1floods11/S1Hand/
+
+# training outputs
+
+checkpoints/
+runs/
+wandb/
+*.pt
+*.pth
+*.ckpt
+
+# OS
+
+.DS_Store
+Thumbs.db

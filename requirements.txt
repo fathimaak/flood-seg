@@ -1,0 +1,8 @@
+numpy
+pandas
+matplotlib
+rasterio
+tqdm
+pyyaml
+google-cloud-storage
+pytest
