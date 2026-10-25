@@ -3,6 +3,8 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import ListedColormap
+import json
+from src.dataset import Sen1Floods11, compute_stats
 
 CMAP = ListedColormap(["#888888", "#d9d9d9", "#1f77b4"])  # no-data, land, water
 
@@ -35,3 +37,27 @@ def show_chip(ds, i, pred=None, save_to=None):
         plt.close(fig)
     else:
         plt.show()
+
+
+def get_stats(root, cache="results/stats.json"):
+    """Per-band mean/std of the training split, cached to disk."""
+    cache = Path(cache)
+
+    if cache.exists():
+        d = json.loads(cache.read_text())
+        return d["mean"], d["std"]
+
+    ds = Sen1Floods11(
+        root,
+        Path(root) / "splits" / "flood_train_data.csv"
+    )
+
+    mean, std = compute_stats(ds, n=len(ds))
+
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    cache.write_text(
+        json.dumps({"mean": mean.tolist(), "std": std.tolist()})
+    )
+
+    return mean.tolist(), std.tolist()
+
