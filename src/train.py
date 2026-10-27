@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader, Subset
 
 from src.dataset import IGNORE_INDEX, Sen1Floods11
 from src.eval import ROOT, evaluate, evaluate_splits
-from src.models import build_unet
+from src.models import build_model
 from src.utils import get_stats
 
 
@@ -39,7 +39,7 @@ def main():
     for k in ["epochs", "seed", "label_fraction", "run_name"]:
         if getattr(args, k) is not None:
             cfg[k] = getattr(args, k)
-    cfg["run_name"] = cfg["run_name"] or f"unet_{cfg['encoder']}_seed{cfg['seed']}_frac{cfg['label_fraction']}"
+    cfg["run_name"] = cfg["run_name"] or f"{cfg.get('arch', 'unet')}_{cfg['encoder']}_seed{cfg['seed']}_frac{cfg['label_fraction']}"
 
     set_seed(cfg["seed"])
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -56,7 +56,11 @@ def main():
 
     loader = DataLoader(train_ds, batch_size=cfg["batch_size"], shuffle=True,
                         num_workers=cfg["num_workers"], drop_last=True)
-    model = build_unet(cfg["encoder"], cfg["encoder_weights"]).to(device)
+    model = build_model(
+     cfg.get("arch", "unet"),
+     cfg["encoder"],
+     cfg["encoder_weights"],
+    ).to(device)
     opt = torch.optim.AdamW(model.parameters(), lr=cfg["lr"])
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=cfg["epochs"])
     loss_fn = nn.CrossEntropyLoss(weight=torch.tensor(cfg["class_weights"], device=device),

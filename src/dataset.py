@@ -18,6 +18,21 @@ def read_split(csv_path):
     df = pd.read_csv(csv_path, header=None, names=["s1", "label"])
     df["s2"] = df["s1"].str.replace("_S1Hand", "_S2Hand", regex=False)
     return df
+def read_s2_raw(path):
+    """Read the 6 model bands as (6,H,W) float32. NaNs are preserved, not replaced."""
+    with rasterio.open(path) as src:
+        return src.read(BAND_IDX_1BASED).astype(np.float32)
+
+
+def read_label(path):
+    with rasterio.open(path) as src:
+        return src.read(1).astype(np.int64)
+
+
+def valid_input_mask(img):
+    """(6,H,W) -> (H,W) bool. A pixel is a valid observation only if all six bands
+    are finite and > 0. No-data areas in the chips are stored as 0 and carry no information."""
+    return np.isfinite(img).all(0) & (img > 0).all(0)
 
 
 
@@ -32,14 +47,12 @@ class Sen1Floods11(Dataset):
         self.std = None if std is None else np.asarray(std, np.float32)[:, None, None]
         self.augment = augment
 
-    def __len__(self):
+    def __len__(self): 
         return len(self.s2_paths)
 
-    def read_raw(self, i):
-        with rasterio.open(self.s2_paths[i]) as src:
-            img = src.read(BAND_IDX_1BASED).astype(np.float32)  # (6,H,W)
-        with rasterio.open(self.lbl_paths[i]) as src:
-            lbl = src.read(1).astype(np.int64)  # (H,W)
+    def read_raw(self, i): 
+        img = read_s2_raw(self.s2_paths[i]) 
+        lbl = read_label(self.lbl_paths[i]) 
         return np.nan_to_num(img, nan=0.0), lbl
 
     def __getitem__(self, i):

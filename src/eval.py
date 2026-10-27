@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 
 from src.dataset import Sen1Floods11
 from src.metrics import Metrics
-from src.models import build_unet
+from src.models import build_model
 
 ROOT = Path(__file__).resolve().parents[1] / "data" / "sen1floods11"
 
@@ -38,7 +38,11 @@ def main():
     args = ap.parse_args()
     device = "cuda" if torch.cuda.is_available() else "cpu"
     ck = torch.load(args.ckpt, map_location=device, weights_only=False)
-    model = build_unet(ck["cfg"]["encoder"], None).to(device)
+    model = build_model(
+      ck["cfg"].get("arch", "unet"),
+      ck["cfg"]["encoder"],
+      None,
+    ).to(device)
     model.load_state_dict(ck["model"])
     res = evaluate_splits(model, args.splits, ck["mean"], ck["std"], device)
     for s, r in res.items():

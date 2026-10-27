@@ -1,0 +1,14 @@
+arch: deeplabv3plus
+
+run_name: null
+seed: 0
+label_fraction: 1.0
+encoder: resnet34
+encoder_weights: imagenet
+epochs: 30
+batch_size: 8
+lr: 0.0003
+crop: 256
+class_weights: [1.0, 4.0]
+num_workers: 2
+
